@@ -1,0 +1,29 @@
+# Virtual environment — never commit this
+venv/
+
+# Environment variables — never commit API keys!
+.env
+
+# ChromaDB local storage
+chroma_db/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# VS Code settings
+.vscode/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_db.py
