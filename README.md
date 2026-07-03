@@ -9,6 +9,10 @@
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5-purple)
 ![Groq](https://img.shields.io/badge/Groq-LLaMA3-yellow)
 
+## 📸 Demo
+
+![App Screenshot](assets/Screenshot.png)
+
 ## 🎯 What It Does
 
 Developers joining a new project spend **weeks** understanding the codebase.
