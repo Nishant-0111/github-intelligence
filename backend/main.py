@@ -15,6 +15,11 @@ from database import save_repo, save_files, mark_repo_indexed, get_all_repos
 from embedder import embed_repo, search_code
 from rag import ask_codebase
 
+import os
+
+# Get port from environment (Railway sets this automatically)
+PORT = int(os.getenv("PORT", 8000))
+
 # ─── APP SETUP ────────────────────────────────────────────
 
 app = FastAPI(
