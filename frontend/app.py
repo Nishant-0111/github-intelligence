@@ -6,8 +6,9 @@ import requests
 import time
 
 # ─── CONFIG ───────────────────────────────────────────────
+import os
 
-API_URL = "http://localhost:8000"  # Your FastAPI backend
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(
     page_title="GitHub Codebase Intelligence",

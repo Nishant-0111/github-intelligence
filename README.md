@@ -9,6 +9,10 @@
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5-purple)
 ![Groq](https://img.shields.io/badge/Groq-LLaMA3-yellow)
 
+## 🌐 Live Demo
+- **App:** https://repo-intelligence.streamlit.app
+- **API Docs:** https://github-intelligence-production.up.railway.app/docs
+
 ## 📸 Demo
 
 ![App Screenshot](assets/Screenshot.png)
