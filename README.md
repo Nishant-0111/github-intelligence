@@ -7,7 +7,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.36-red)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5-purple)
-![Groq](https://img.shields.io/badge/Groq-LLaMA3-yellow)
+![Groq](https://img.shields.io/badge/Groq-Qwen3-yellow)
 
 ## 🌐 Live Demo
 - **App:** https://repo-intelligence.streamlit.app
@@ -41,7 +41,7 @@ FastAPI Backend
         ↓
    RAG Pipeline
         ↓
-Groq (llama-3.1-8b-instant)
+Groq (qwen/qwen3.8-27b)
         ↓
 Answer + File Citations
 ```
@@ -53,9 +53,10 @@ Answer + File Citations
 | Frontend | Streamlit | Chat UI |
 | Backend | FastAPI | REST API |
 | Database | MySQL + SQLAlchemy | Repo & file metadata |
+| RAG Framework | LangChain | Text splitter, embeddings, vector store, prompt + LLM chain |
 | Vector Store | ChromaDB | Code embeddings |
-| Embeddings | sentence-transformers | Free local model |
-| LLM | Groq (llama-3.1-8b-instant) | Answer generation |
+| Embeddings | sentence-transformers | Free local model (via LangChain HuggingFaceEmbeddings) |
+| LLM | Groq (qwen/qwen3.8-27b) | Answer generation (via LangChain ChatGroq) |
 | GitHub | PyGithub | Repo fetching |
 
 ## 🚀 Quick Start
@@ -108,10 +109,10 @@ streamlit run app.py
 ## 📖 How It Works
 
 1. **Index** — Paste any GitHub URL → app fetches all code files via GitHub API
-2. **Chunk** — File content split into overlapping chunks for better context
-3. **Embed** — Each chunk converted to a vector using sentence-transformers
-4. **Search** — User question converted to vector, ChromaDB finds similar chunks
-5. **Answer** — Groq LLM reads relevant chunks → generates accurate answer with citations
+2. **Chunk** — File content split into overlapping chunks with LangChain's text splitter
+3. **Embed** — Each chunk converted to a vector using sentence-transformers (LangChain HuggingFaceEmbeddings)
+4. **Search** — User question converted to vector, ChromaDB (LangChain Chroma) finds similar chunks
+5. **Answer** — A LangChain chain (prompt → Groq LLM → parser) reads relevant chunks → generates accurate answer with citations
 
 ## 🔑 Environment Variables
 
@@ -142,7 +143,7 @@ github-intelligence/
 
 ## 🎓 Skills Demonstrated
 
-- **RAG Pipeline** — Retrieval Augmented Generation from scratch
+- **RAG Pipeline** — Retrieval Augmented Generation built with LangChain
 - **Vector Embeddings** — Semantic code search with ChromaDB
 - **REST API Design** — FastAPI with async background tasks
 - **SQL Database** — MySQL schema design with SQLAlchemy ORM

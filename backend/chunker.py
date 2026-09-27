@@ -2,6 +2,7 @@
 # Fetches file content from GitHub and saves chunks to MySQL
 
 from github import Github
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from database import SessionLocal, RepoFile, CodeChunk
 from dotenv import load_dotenv
 import os
@@ -10,21 +11,19 @@ load_dotenv()
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list:
     """
-    Splits text into overlapping chunks of words.
+    Splits text into overlapping chunks using LangChain's text splitter.
+    chunk_size and overlap are counted in WORDS (same as before).
+    The splitter breaks on lines, then words, so code keeps its line
+    structure instead of being flattened into one long line.
     overlap = shared words between chunks for better context
     """
-    words = text.split()
-    chunks = []
-    start = 0
-
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        if chunk.strip():
-            chunks.append(chunk)
-        start += chunk_size - overlap
-
-    return chunks
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap,
+        length_function=lambda t: len(t.split()),   # measure size in words
+        separators=["\n", " ", ""]                  # lines first -> keeps ~50-word overlap
+    )
+    return splitter.split_text(text)
 
 
 def fetch_and_chunk_repo(repo_id: int, repo_url: str):

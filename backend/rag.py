@@ -1,6 +1,7 @@
 # backend/rag.py
 # This is the brain of the entire project.
 # It connects ChromaDB search → LLM → final answer
+# Built with LangChain: ChatPromptTemplate + ChatGroq + StrOutputParser
 
 from embedder import search_code
 from database import SessionLocal, Repo
@@ -11,14 +12,44 @@ load_dotenv()
 
 # ─── SETUP ────────────────────────────────────────────────
 
-from groq import Groq
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+llm = ChatGroq(
+    model="qwen/qwen3.8-27b",     # llama-3.1-8b-instant was retired by Groq
+    temperature=0,        # 0 = deterministic, no hallucination
+    max_tokens=1000,      # Limit response length
+    api_key=os.getenv("GROQ_API_KEY")
+)
+
+# ─── PROMPT TEMPLATE + CHAIN ──────────────────────────────
+
+prompt_template = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful code assistant. Answer questions about codebases clearly and concisely. Always cite the file names where you found the answer."),
+    ("human", """You are an expert code assistant helping developers understand a GitHub codebase.
+
+You have been given relevant code chunks retrieved from the repository.
+Use ONLY the provided code context to answer the question.
+Always mention which file(s) the answer comes from.
+If the answer is not in the provided context, say "I couldn't find that in the indexed code."
+
+CODE CONTEXT:
+{context}
+
+QUESTION: {question}
+
+ANSWER:"""),
+])
+
+# LangChain chain: fill the prompt -> call the LLM -> return a plain string
+rag_chain = prompt_template | llm | StrOutputParser()
 
 # ─── PROMPT BUILDER ───────────────────────────────────────
 
-def build_prompt(question: str, code_chunks: list) -> str:
+def build_prompt(question: str, code_chunks: list) -> dict:
     """
-    Builds the prompt we send to the LLM.
+    Builds the inputs for the prompt template.
 
     The prompt has two parts:
     1. The retrieved code context (from ChromaDB)
@@ -37,21 +68,8 @@ def build_prompt(question: str, code_chunks: list) -> str:
 
     context = "\n".join(context_parts)
 
-    prompt = f"""You are an expert code assistant helping developers understand a GitHub codebase.
-
-You have been given relevant code chunks retrieved from the repository.
-Use ONLY the provided code context to answer the question.
-Always mention which file(s) the answer comes from.
-If the answer is not in the provided context, say "I couldn't find that in the indexed code."
-
-CODE CONTEXT:
-{context}
-
-QUESTION: {question}
-
-ANSWER:"""
-
-    return prompt
+    # The template above fills these two variables into the full prompt
+    return {"context": context, "question": question}
 
 
 # ─── MAIN RAG FUNCTION ────────────────────────────────────
@@ -82,30 +100,14 @@ def ask_codebase(repo_id: int, question: str, top_k: int = 5) -> dict:
     for c in chunks:
         print(f"    {c['file_path']} (similarity: {c['similarity']})")
 
-    # Step 2 — Build the prompt
-    prompt = build_prompt(question, chunks)
+    # Step 2 — Build the prompt inputs (context + question)
+    prompt_inputs = build_prompt(question, chunks)
 
-    # Step 3 — Send to LLM
-    print(f"\n Sending to llama-3.1-8b-instant...")
+    # Step 3 — Send to LLM through the LangChain chain
+    print(f"\n Sending to {llm.model_name}...")
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful code assistant. Answer questions about codebases clearly and concisely. Always cite the file names where you found the answer."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0,        # 0 = deterministic, no hallucination
-        max_tokens=1000       # Limit response length
-    )
-
-    # Step 4 — Extract answer
-    answer = response.choices[0].message.content
+    # Step 4 — Extract answer (StrOutputParser already returns a plain string)
+    answer = rag_chain.invoke(prompt_inputs)
 
     # Step 5 — Format sources
     sources = list({c["file_path"] for c in chunks})  # Unique file paths
